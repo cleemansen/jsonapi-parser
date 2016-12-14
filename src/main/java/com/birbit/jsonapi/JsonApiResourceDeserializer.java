@@ -32,8 +32,8 @@ import java.util.Map;
 @SuppressWarnings("WeakerAccess")
 public class JsonApiResourceDeserializer<T> {
     final Class<T> klass;
-    private Map<String, Setter> relationshipSetters;
-    private Map<String, Setter> linkSetters;
+    private Map<String, Setter> relationshipSetters = new HashMap<>();
+    private Map<String, Setter> linkSetters = new HashMap<>();
     private Setter idSetter;
     final String apiType;
 

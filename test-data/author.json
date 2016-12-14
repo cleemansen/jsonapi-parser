@@ -1,0 +1,28 @@
+{
+  "links": {
+    "self": "http://example.com/books",
+    "next": "http://example.com/books?page[offset]=2",
+    "last": "http://example.com/books?page[offset]=10"
+  },
+  "data": [{
+    "type": "authors",
+    "id": "1",
+    "attributes": {
+      "first-name": "Philip J.",
+      "last-name": "Fry"
+    },
+    "relationships": {
+      "book": {
+        "links": {
+          "self": "http://example.com/authors/1/relationships/book",
+          "related": "http://example.com/articles/1/author"
+        },
+        "data": { "type": "book", "id": "1" }
+      }
+    },
+    "links": {
+      "self": "http://example.com/authors/1"
+    }
+  }],
+  "included": []
+}

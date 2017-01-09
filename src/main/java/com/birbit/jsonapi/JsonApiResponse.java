@@ -74,6 +74,10 @@ public class JsonApiResponse<T> {
         return getIncluded(type).get(id);
     }
 
+    public Map<Class, String> getTypeMapping() {
+        return typeMapping;
+    }
+
     @NonNull
     public Map<String, Map<String, ?>> getIncluded() {
         return included;

@@ -35,8 +35,11 @@ public class LinkDataTest {
     public void fooTest() throws IOException {
         String json = TestUtil.readTestData("with_link_data.json");
         Gson gson = TestUtil.createGson(new JsonApiResourceDeserializer("users", User.class));
-        JsonApiResponse<User> response = gson.fromJson(json, new TypeToken<JsonApiResponse<User>>() {}.getType());
-        User user = response.getData();
+        JsonApiResponse<User[]> response = gson.fromJson(json, new TypeToken<JsonApiResponse<User[]>>() {}.getType());
+        User[] users = response.getData();
+
+        assertThat(users.length, is(1));
+        User user = users[0];
         assertThat(user.id, is("1"));
         assertThat(user.name, is("Yigit"));
         assertThat(user.links, not(nullValue()));

@@ -26,7 +26,8 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 @SuppressWarnings("WeakerAccess")
-public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
+public class JsonApiDeserializer<T> implements JsonDeserializer<JsonApiResponse> {
+
     Map<String, JsonApiResourceDeserializer<?>> deserializerMap;
     final Map<Class, String> typeMapping;
     public JsonApiDeserializer(JsonApiResourceDeserializer... deserializers) {
@@ -58,7 +59,7 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
 
         JsonApiLinks links = parseLinks(context, jsonObject);
 
-        Object data = parseData(context, parameterizedType, jsonObject);
+        T[] data = parseData(context, parameterizedType, jsonObject);
         List<JsonApiError> errors = parserErrors(context, jsonObject);
         if ((data == null) == (errors == null)) {
             throw new JsonParseException("The JSON API response should have data or errors");
@@ -117,39 +118,43 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
         return included;
     }
 
-    private Object parseData(JsonDeserializationContext context, ParameterizedType parameterizedType, JsonObject jsonObject) {
+    private T[] parseData(JsonDeserializationContext context, ParameterizedType parameterizedType, JsonObject jsonObject) {
         JsonElement dataElm = jsonObject.get("data");
         if (dataElm != null) {
             Type typeArg = parameterizedType.getActualTypeArguments()[0];
             if (dataElm.isJsonArray()) {
                 JsonArray jsonArray = dataElm.getAsJsonArray();
                 final int size = jsonArray.size();
-                boolean isArray = typeArg instanceof GenericArrayType;
-                if (isArray) {
+//                boolean isArray = typeArg instanceof GenericArrayType;
+//                if (isArray) {
                     TypeToken<?> typeToken = TypeToken.get(typeArg);
-                    Object[] result = (Object[]) Array.newInstance(typeToken.getRawType().getComponentType(), size);
+                    T[] result = (T[]) Array.newInstance(typeToken.getRawType().getComponentType(), size);
                     for (int i = 0; i < size; i ++) {
-                        ResourceWithIdAndType resourceWithIdAndType = parseResource(jsonArray.get(i), context);
+                        ResourceWithIdAndType<T> resourceWithIdAndType = parseResource(jsonArray.get(i), context);
                         result[i] = resourceWithIdAndType.resource;
                     }
                     return result;
-                } else {
-                    List result = new ArrayList(size);
-                    for (int i = 0; i < size; i ++) {
-                        ResourceWithIdAndType resourceWithIdAndType = parseResource(jsonArray.get(i), context);
-                        //noinspection unchecked
-                        result.add(resourceWithIdAndType.resource);
-                    }
-                    return result;
-                }
+//                } else {
+//                    TypeToken<?> typeToken = TypeToken.get(typeArg);
+//                    T[] result = (T[]) Array.newInstance(typeToken.getRawType().getComponentType(), size);
+//                    for (int i = 0; i < size; i ++) {
+//                        ResourceWithIdAndType<T> resourceWithIdAndType = parseResource(jsonArray.get(i), context);
+//                        //noinspection unchecked
+//                        result[i] = resourceWithIdAndType.resource;
+//                    }
+//                    return result;
+//                }
             } else if (dataElm.isJsonObject()) {
-                return parseResource(dataElm, context).resource;
+                T resource = parseResource(dataElm, context).resource;
+                Object[] result = (Object[]) Array.newInstance(resource.getClass(), 1);
+                result[0] = resource;
+                return (T[]) result;
             }
         }
         return null;
     }
 
-    private ResourceWithIdAndType parseResource(JsonElement jsonElement, JsonDeserializationContext context) {
+    private ResourceWithIdAndType<T> parseResource(JsonElement jsonElement, JsonDeserializationContext context) {
         JsonObject jsonObject = jsonElement.getAsJsonObject();
         String apiType = jsonObject.get("type").getAsString();
         String id = jsonObject.get("id").getAsString();
@@ -168,12 +173,12 @@ public class JsonApiDeserializer implements JsonDeserializer<JsonApiResponse> {
                 .registerTypeAdapter(JsonApiLinks.class, JsonApiLinksDeserializer.INSTANCE);
     }
 
-    static class ResourceWithIdAndType {
+    static class ResourceWithIdAndType<T> {
         final String apiType;
         final String id;
-        final Object resource;
+        final T resource;
 
-        public ResourceWithIdAndType(String apiType, String id, Object resource) {
+        public ResourceWithIdAndType(String apiType, String id, T resource) {
             this.apiType = apiType;
             this.id = id;
             this.resource = resource;

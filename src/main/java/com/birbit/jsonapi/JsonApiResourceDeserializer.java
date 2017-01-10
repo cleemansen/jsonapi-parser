@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.reflect.FieldUtils;
 
 @SuppressWarnings("WeakerAccess")
 public class JsonApiResourceDeserializer<T> {
@@ -42,7 +43,7 @@ public class JsonApiResourceDeserializer<T> {
         this.klass = klass;
         this.apiType = apiType;
 
-        for (Field field : klass.getDeclaredFields()) {
+        for (Field field : FieldUtils.getAllFieldsList(klass)) {
             ResourceId resourceId = field.getAnnotation(ResourceId.class);
             if (resourceId != null) {
                 validateResourceId(field.getType());

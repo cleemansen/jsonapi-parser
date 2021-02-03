@@ -20,7 +20,6 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -68,8 +67,9 @@ public class JsonApiDeserializer<T> implements JsonDeserializer<JsonApiResponse>
             return new JsonApiResponse(errors, typeMapping, links);
         }
         Map<String, Map<String, Object>> included = parseIncluded(context, jsonObject);
+        Map<String, Object> meta = parseMeta(context, jsonObject);
         //noinspection unchecked
-        return new JsonApiResponse(data, included, typeMapping, links);
+        return new JsonApiResponse(data, included, meta, typeMapping, links);
     }
 
     private List<JsonApiError> parserErrors(JsonDeserializationContext context, JsonObject jsonObject) {
@@ -166,6 +166,14 @@ public class JsonApiDeserializer<T> implements JsonDeserializer<JsonApiResponse>
             resource = null;
         }
         return new ResourceWithIdAndType(apiType, id, resource);
+    }
+
+    private Map<String, Object> parseMeta(JsonDeserializationContext context, JsonObject jsonObject) {
+        JsonElement meta = jsonObject.get("meta");
+        if (meta == null || !meta.isJsonObject()) {
+            return null;
+        }
+        return context.deserialize(meta, Map.class);
     }
 
     public static GsonBuilder register(GsonBuilder builder, JsonApiResourceDeserializer... deserializers) {
